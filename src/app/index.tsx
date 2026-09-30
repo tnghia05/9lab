@@ -1,54 +1,88 @@
-import { StatusBar, StyleSheet, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Polygon, Stop } from 'react-native-svg';
+import { useAudioPlayer } from 'expo-audio';
+import { useState } from 'react';
+import { Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+const notes = [
+  { name: 'Đô', color: '#F44336', sound: require('../../assets/sounds/note-1.wav') },
+  { name: 'Rê', color: '#FF9800', sound: require('../../assets/sounds/note-2.wav') },
+  { name: 'Mi', color: '#FFEB3B', sound: require('../../assets/sounds/note-3.wav') },
+  { name: 'Fa', color: '#4CAF50', sound: require('../../assets/sounds/note-4.wav') },
+  { name: 'Sol', color: '#009688', sound: require('../../assets/sounds/note-5.wav') },
+  { name: 'La', color: '#2196F3', sound: require('../../assets/sounds/note-6.wav') },
+  { name: 'Si', color: '#9C27B0', sound: require('../../assets/sounds/note-7.wav') },
+];
 
 export default function HomeScreen() {
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#2c2015" />
-      <Svg
-        accessibilityLabel="Blue diamond"
-        width={280}
-        height={190}
-        viewBox="0 0 280 190"
-        style={styles.diamond}>
-        <Defs>
-          <LinearGradient id="leftFace" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#0B5FBA" />
-            <Stop offset="1" stopColor="#79D9FF" />
-          </LinearGradient>
-          <LinearGradient id="rightFace" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#F5FEFF" />
-            <Stop offset="1" stopColor="#1F8FE5" />
-          </LinearGradient>
-        </Defs>
+  const player1 = useAudioPlayer(notes[0].sound);
+  const player2 = useAudioPlayer(notes[1].sound);
+  const player3 = useAudioPlayer(notes[2].sound);
+  const player4 = useAudioPlayer(notes[3].sound);
+  const player5 = useAudioPlayer(notes[4].sound);
+  const player6 = useAudioPlayer(notes[5].sound);
+  const player7 = useAudioPlayer(notes[6].sound);
+  const players = [player1, player2, player3, player4, player5, player6, player7];
+  const [activeNote, setActiveNote] = useState<number | null>(null);
 
-        <Polygon points="20,80 69,37 211,37 260,80 140,166" fill="#168BDE" />
-        <Polygon points="20,80 69,37 93,80" fill="#0C5EAF" />
-        <Polygon points="69,37 117,80 93,80" fill="#A7E9FF" />
-        <Polygon points="69,37 140,20 117,80" fill="#E3F9FF" />
-        <Polygon points="140,20 211,37 164,80" fill="#A7E9FF" />
-        <Polygon points="211,37 260,80 187,80" fill="#0B5EAF" />
-        <Polygon points="211,37 187,80 164,80" fill="#D9F7FF" />
-        <Polygon points="93,80 117,80 140,166" fill="url(#leftFace)" />
-        <Polygon points="117,80 140,20 164,80" fill="#F8FEFF" />
-        <Polygon points="117,80 164,80 140,166" fill="#93E5FF" />
-        <Polygon points="164,80 187,80 140,166" fill="url(#rightFace)" />
-        <Polygon points="20,80 93,80 140,166" fill="#0D6FC4" opacity={0.72} />
-        <Polygon points="187,80 260,80 140,166" fill="#0A61B6" opacity={0.8} />
-        <Polygon points="31,78 72,43 60,80" fill="#FFFFFF" opacity={0.72} />
-      </Svg>
-    </View>
+  function playNote(index: number) {
+    const player = players[index];
+    player.seekTo(0);
+    player.play();
+    setActiveNote(index);
+    setTimeout(() => setActiveNote((current) => current === index ? null : current), 150);
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      <View style={styles.header}>
+        <Text style={styles.title}>XYLOPHONE</Text>
+        <Text style={styles.subtitle}>Chạm vào phím để chơi nhạc</Text>
+      </View>
+
+      <View style={styles.keys}>
+        {notes.map((note, index) => (
+          <Pressable
+            key={note.name}
+            accessibilityRole="button"
+            accessibilityLabel={`Phím ${note.name}`}
+            onPress={() => playNote(index)}
+            style={({ pressed }) => [
+              styles.key,
+              { backgroundColor: note.color },
+              pressed && styles.keyPressed,
+              activeNote === index && styles.keyActive,
+            ]}>
+            <Text style={styles.keyLabel}>{note.name}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={styles.footer}>C  ·  D  ·  E  ·  F  ·  G  ·  A  ·  B</Text>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: { flex: 1, backgroundColor: '#000000', paddingHorizontal: 14 },
+  header: { alignItems: 'center', paddingTop: 18, paddingBottom: 18 },
+  title: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', letterSpacing: 3 },
+  subtitle: { color: '#9B9B9B', fontSize: 12, marginTop: 6 },
+  keys: { flex: 1, justifyContent: 'center', gap: 7, paddingBottom: 10 },
+  key: {
     flex: 1,
+    maxHeight: 78,
+    minHeight: 48,
+    borderRadius: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF7FF',
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  diamond: {
-    marginTop: -40,
-  },
+  keyPressed: { opacity: 0.78, transform: [{ scale: 0.98 }] },
+  keyActive: { borderWidth: 3, borderColor: '#FFFFFF' },
+  keyLabel: { color: 'rgba(0,0,0,0.55)', fontSize: 15, fontWeight: '800' },
+  footer: { color: '#777777', fontSize: 11, letterSpacing: 2, textAlign: 'center', paddingBottom: 14 },
 });
